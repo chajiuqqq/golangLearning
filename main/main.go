@@ -1,11 +1,26 @@
 package main
 
-func main() {
-	a := make(chan int)
-	b := make(chan string)
-	c := make(chan interface{})
+import (
+	"gee"
+	"net/http"
+)
 
-	a <- 1
-	<-a
-	i := <-a
+func main() {
+	r := gee.New()
+	r.Get("/", func(c *gee.Context) {
+		c.Html(http.StatusOK, "<h1>Hello Gee</h1>")
+	})
+	r.Get("/hello", func(c *gee.Context) {
+		// expect /hello?name=geektutu
+		c.String(http.StatusOK, "hello %s, you're at %s\n", c.Query("name"), c.Path)
+	})
+
+	r.Get("/login", func(c *gee.Context) {
+		c.JSON(http.StatusOK, gee.H{
+			"username": "123",
+			"password": "sjdkj",
+		})
+	})
+
+	r.Run(":9999")
 }
