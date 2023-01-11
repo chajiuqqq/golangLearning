@@ -16,11 +16,11 @@ func New() *Engine {
 }
 
 func (engin *Engine) Get(path string, h HandlerFunc) {
-	engin.router.Route("GET", path, h)
+	engin.router.addRoute("GET", path, h)
 }
 
 func (engin *Engine) Post(path string, h HandlerFunc) {
-	engin.router.Route("POST", path, h)
+	engin.router.addRoute("POST", path, h)
 }
 
 func (engine *Engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
