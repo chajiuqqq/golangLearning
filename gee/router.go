@@ -17,6 +17,10 @@ func NewRouter() *router {
 	}
 }
 func (r *router) addRoute(m string, path string, h HandlerFunc) {
+	//去除最后的/
+	// if strings.HasSuffix(path, "/") {
+	// 	path = path[:len(path)-1]
+	// }
 	key := m + "-" + path
 	r.handlers[key] = h
 	if r.roots[m] == nil {
@@ -45,9 +49,12 @@ func (r *router) handle(c *Context) {
 
 	key := c.Method + "-" + c.Path
 	if _, handler := r.GetRoute(c.Method, c.Path); handler != nil {
-		handler(c)
+		c.handlers = append(c.handlers, handler)
 	} else {
-		log.Println("404 not found: " + key)
-		fmt.Fprintf(c.w, "404 not found:%s %s", c.Method, c.Path)
+		c.handlers = append(c.handlers, func(c *Context) {
+			log.Println("404 not found: " + key)
+			c.Html(404, fmt.Sprintf("404 not found:%s %s", c.Method, c.Path))
+		})
 	}
+	c.Next()
 }

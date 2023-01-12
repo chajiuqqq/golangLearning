@@ -3,6 +3,7 @@ package gee
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -12,10 +13,12 @@ type Context struct {
 	Method     string
 	Path       string
 	StatusCode int
+	handlers   []HandlerFunc
+	index      int
 }
 
 func NewContext(w http.ResponseWriter, r *http.Request) *Context {
-	return &Context{w: w, r: r, Method: r.Method, Path: r.URL.Path}
+	return &Context{w: w, r: r, Method: r.Method, Path: r.URL.Path, index: -1, handlers: make([]HandlerFunc, 0)}
 }
 
 func (c *Context) Status(code int) {
@@ -49,4 +52,16 @@ func (c *Context) Query(key string) string {
 }
 func (c *Context) PostForm(key string) string {
 	return c.r.FormValue(key)
+}
+func (c *Context) Next() {
+	c.index++
+	for ; c.index < len(c.handlers); c.index++ {
+		c.handlers[c.index](c)
+	}
+}
+
+func (c *Context) Fail(code int, msg string) {
+	c.Status(code)
+	log.Println("error, " + msg)
+	c.Html(code, msg)
 }

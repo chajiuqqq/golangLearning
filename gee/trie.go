@@ -46,15 +46,11 @@ func (n *node) searchChildren(part string) []*node {
 }
 
 func (n *node) insert(pattern string, parts []string) {
-	if pattern == "/" {
-		n.pattern = pattern
-		return
-	}
 	foundChild := n
 	for _, part := range parts {
 		nextNode := foundChild.searchChild(part)
 		if nextNode == nil {
-			nextNode = &node{pattern: pattern, part: part, wild: part[0] == ':' || part[0] == '*'}
+			nextNode = &node{pattern: pattern, part: part, wild: part != "" && (part[0] == ':' || part[0] == '*')}
 			foundChild.children = append(foundChild.children, nextNode)
 		}
 		foundChild = nextNode
