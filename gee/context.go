@@ -15,6 +15,7 @@ type Context struct {
 	StatusCode int
 	handlers   []HandlerFunc
 	index      int
+	params     map[string]string
 }
 
 func NewContext(w http.ResponseWriter, r *http.Request) *Context {
@@ -64,4 +65,8 @@ func (c *Context) Fail(code int, msg string) {
 	c.Status(code)
 	log.Println("error, " + msg)
 	c.Html(code, msg)
+}
+
+func (c *Context) Param(key string) string {
+	return c.params[key]
 }

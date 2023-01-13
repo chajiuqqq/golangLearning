@@ -3,6 +3,7 @@ package gee
 import (
 	"fmt"
 	"log"
+	"strings"
 )
 
 type router struct {
@@ -37,19 +38,31 @@ func (r *router) POST(path string, h HandlerFunc) {
 	r.addRoute("POST", path, h)
 }
 
-func (r *router) GetRoute(m string, path string) (*node, HandlerFunc) {
+func (r *router) GetRoute(m string, path string) (*node, HandlerFunc, map[string]string) {
+	searchParts := patternSplit(path)
 	node := r.roots[m].search(patternSplit(path), 0)
+	params := make(map[string]string)
 	if node != nil {
-		return node, r.handlers[m+"-"+node.pattern]
+		parts := patternSplit(node.pattern)
+		for index, part := range parts {
+			if part[0] == ':' {
+				params[part[1:]] = searchParts[index]
+			}
+			if part[0] == '*' && len(part) > 1 {
+				params[part[1:]] = strings.Join(searchParts[index:], "/")
+			}
+		}
+		return node, r.handlers[m+"-"+node.pattern], params
 	}
-	return nil, nil
+	return nil, nil, nil
 }
 
 func (r *router) handle(c *Context) {
 
 	key := c.Method + "-" + c.Path
-	if _, handler := r.GetRoute(c.Method, c.Path); handler != nil {
+	if _, handler, params := r.GetRoute(c.Method, c.Path); handler != nil {
 		c.handlers = append(c.handlers, handler)
+		c.params = params
 	} else {
 		c.handlers = append(c.handlers, func(c *Context) {
 			log.Println("404 not found: " + key)
